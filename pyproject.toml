@@ -1,0 +1,7 @@
+[project]
+name = "client_wrapper"
+version = "0.1.0"
+description = "client wrapper for usage with llm experiment"
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "MIT"}
