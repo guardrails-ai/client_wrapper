@@ -84,6 +84,7 @@ class TestProcessor:
             requests.put(
                 f"{self.control_plane_host}/api/tests/{test_data['id']}",
                 json=asdict(report),
+                headers={"x-service-token": _get_token()},
             )
         except Exception as e:
             print(f"Error processing test {test_data['id']}: {e}")
@@ -112,6 +113,7 @@ def tt_webhook_polling_sync(
     max_workers: int = 100,  # Controls max concurrency
 ) -> Callable:
     processor = TestProcessor(control_plane_host, generator_host, max_workers)
+
     def wrap(fn: Callable[[str, ...], str]) -> Callable:
         def wrapped(*args, **kwargs):
             if enable:
@@ -121,9 +123,12 @@ def tt_webhook_polling_sync(
                     while True:
                         print("===> Starting...")
                         if not last_successful_test:
-                            print("===> No successful connection tests yet, check for tests")
+                            print(
+                                "===> No successful connection tests yet, check for tests"
+                            )
                             pending_connection_tests = requests.get(
-                                f"{control_plane_host}/api/connection-tests?status=pending&token={_get_token()}"
+                                f"{control_plane_host}/api/connection-tests?status=pending&token={_get_token()}",
+                                headers={"x-service-token": _get_token()},
                             ).json()
                             for test in pending_connection_tests:
                                 try:
@@ -134,8 +139,11 @@ def tt_webhook_polling_sync(
                                             "response": response,
                                             "status": "completed",
                                             "executed_by": _get_token(),
-                                            "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                            "completed_at": time.strftime(
+                                                "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
+                                            ),
                                         },
+                                        headers={"x-service-token": _get_token()},
                                     )
                                     last_successful_test = int(time.time())
                                 except Exception as e:
@@ -145,24 +153,31 @@ def tt_webhook_polling_sync(
                                         json={
                                             "status": "failed",
                                             "executed_by": _get_token(),
-                                            "failed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                            "failed_at": time.strftime(
+                                                "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
+                                            ),
                                             "error": str(e),
                                         },
+                                        headers={"x-service-token": _get_token()},
                                     )
                                     last_successful_test = None
-
+                        # add webhook token header
                         experiments = requests.get(
-                            f"{control_plane_host}/api/experiments?token={_get_token()}"
+                            f"{control_plane_host}/api/experiments?token={_get_token()}",
+                            headers={"x-service-token": _get_token()},
                         ).json()
                         print(f"=== Found {len(experiments)} experiments")
                         sleep = True
 
                         for experiment in experiments:
+                            if experiment["status"] == "completed":
+                                continue
                             print(
                                 f"=== checking for tests for experiment {experiment['id']}"
                             )
+
                             tests = requests.get(
-                                f"{control_plane_host}/api/experiments/{experiment['id']}/tests"
+                                f"{control_plane_host}/api/experiments/{experiment['id']}/tests",
                             ).json()
 
                             for test in tests:
