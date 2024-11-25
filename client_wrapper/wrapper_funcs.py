@@ -117,39 +117,34 @@ def tt_webhook_polling_sync(
             if enable:
                 processor.start_processing(fn)
                 try:
-                    last_successful_test = None
                     while True:
                         print("===> Starting...")
-                        if not last_successful_test:
-                            print("===> No successful connection tests yet, check for tests")
-                            pending_connection_tests = requests.get(
-                                f"{control_plane_host}/api/connection-tests?status=pending&token={_get_token()}"
-                            ).json()
-                            for test in pending_connection_tests:
-                                try:
-                                    response = fn(test["prompt"])
-                                    requests.patch(
-                                        f"{control_plane_host}/api/connection-tests/{test['id']}",
-                                        json={
-                                            "response": response,
-                                            "status": "completed",
-                                            "executed_by": _get_token(),
-                                            "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                                        },
-                                    )
-                                    last_successful_test = int(time.time())
-                                except Exception as e:
-                                    print("Error processing connection test", e)
-                                    requests.patch(
-                                        f"{control_plane_host}/api/connection-tests/{test['id']}",
-                                        json={
-                                            "status": "failed",
-                                            "executed_by": _get_token(),
-                                            "failed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                                            "error": str(e),
-                                        },
-                                    )
-                                    last_successful_test = None
+                        pending_connection_tests = requests.get(
+                            f"{control_plane_host}/api/connection-tests?status=pending&token={_get_token()}"
+                        ).json()
+                        for test in pending_connection_tests:
+                            try:
+                                response = fn(test["prompt"])
+                                requests.patch(
+                                    f"{control_plane_host}/api/connection-tests/{test['id']}",
+                                    json={
+                                        "response": response,
+                                        "status": "completed",
+                                        "executed_by": _get_token(),
+                                        "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                    },
+                                )
+                            except Exception as e:
+                                print("Error processing connection test", e)
+                                requests.patch(
+                                    f"{control_plane_host}/api/connection-tests/{test['id']}",
+                                    json={
+                                        "status": "failed",
+                                        "executed_by": _get_token(),
+                                        "failed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                        "error": str(e),
+                                    },
+                                )
 
                         experiments = requests.get(
                             f"{control_plane_host}/api/experiments?token={_get_token()}"
