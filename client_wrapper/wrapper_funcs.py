@@ -117,65 +117,96 @@ def tt_webhook_polling_sync(
             if enable:
                 processor.start_processing(fn)
                 try:
+                    connection_test_retries = 0
+                    experiement_retries = 0
                     while True:
                         print("===> Starting...")
-                        pending_connection_tests = requests.get(
-                            f"{control_plane_host}/api/connection-tests?status=pending&token={_get_token()}"
-                        ).json()
-                        for test in pending_connection_tests:
-                            try:
-                                response = fn(test["prompt"])
-                                requests.patch(
-                                    f"{control_plane_host}/api/connection-tests/{test['id']}",
-                                    json={
-                                        "response": response,
-                                        "status": "completed",
-                                        "executed_by": _get_token(),
-                                        "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                                    },
-                                )
-                            except Exception as e:
-                                print("Error processing connection test", e)
-                                requests.patch(
-                                    f"{control_plane_host}/api/connection-tests/{test['id']}",
-                                    json={
-                                        "status": "failed",
-                                        "executed_by": _get_token(),
-                                        "failed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                                        "error": str(e),
-                                    },
-                                )
-
-                        experiments = requests.get(
-                            f"{control_plane_host}/api/experiments?token={_get_token()}"
-                        ).json()
-                        print(f"=== Found {len(experiments)} experiments")
-                        sleep = True
-
-                        for experiment in experiments:
-                            print(
-                                f"=== checking for tests for experiment {experiment['id']}"
+                        try:
+                            connection_tests_url = f"{control_plane_host}/api/connection-tests?status=pending&token={_get_token()}"
+                            print(f"Fetching connection tests from {connection_tests_url}")
+                            response = requests.get(
+                                connection_tests_url
                             )
-                            tests = requests.get(
-                                f"{control_plane_host}/api/experiments/{experiment['id']}/tests"
-                            ).json()
-
-                            for test in tests:
-                                test_id = test["id"]
-                                if (
-                                    not test["response"]
-                                    and test_id not in processor.queued_tests
-                                ):
-                                    sleep = False
-                                    processor.queued_tests[test_id] = True
-                                    processor.processing_queue.put(
-                                        {
-                                            "id": test_id,
-                                            "prompt": test["prompt"],
-                                            "persona": test["persona"],
-                                        }
+                            
+                            if response.status_code != 200:
+                                print("Error fetching connection tests", response.text)
+                                raise Exception("Error fetching connection tests, task is not healthy")
+                            pending_connection_tests = response.json()
+                            for test in pending_connection_tests:
+                                try:
+                                    response = fn(test["prompt"])
+                                    requests.patch(
+                                        f"{control_plane_host}/api/connection-tests/{test['id']}",
+                                        json={
+                                            "response": response,
+                                            "status": "completed",
+                                            "executed_by": _get_token(),
+                                            "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                        },
                                     )
+                                except Exception as e:
+                                    print("Error processing connection test", e)
+                                    requests.patch(
+                                        f"{control_plane_host}/api/connection-tests/{test['id']}",
+                                        json={
+                                            "status": "failed",
+                                            "executed_by": _get_token(),
+                                            "failed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                            "error": str(e),
+                                        },
+                                    )
+                        except Exception as e:
+                            print("Error fetching connection tests", e)
+                            connection_test_retries += 1
+                            sleep = True
+                            # If it fails for over 1 minute, raise an exception
+                            if connection_test_retries > 20:
+                                raise
 
+                        sleep = False
+                        try:
+                            experiments_response = requests.get(
+                                f"{control_plane_host}/api/experiments?token={_get_token()}"
+                            )
+
+                            if experiments_response.status_code != 200:
+                                print("Error fetching experiments", experiments_response.text)
+                                raise Exception("Error fetching experiments, task is not healthy")
+                            experiments = experiments_response.json()
+                            print(f"=== Found {len(experiments)} experiments")
+                            sleep = True
+
+                            for experiment in experiments:
+                                print(
+                                    f"=== checking for tests for experiment {experiment['id']}"
+                                )
+                                tests = requests.get(
+                                    f"{control_plane_host}/api/experiments/{experiment['id']}/tests"
+                                ).json()
+
+                                for test in tests:
+                                    test_id = test["id"]
+                                    if (
+                                        not test["response"]
+                                        and test_id not in processor.queued_tests
+                                    ):
+                                        sleep = False
+                                        processor.queued_tests[test_id] = True
+                                        processor.processing_queue.put(
+                                            {
+                                                "id": test_id,
+                                                "prompt": test["prompt"],
+                                                "persona": test["persona"],
+                                            }
+                                        )
+                        except Exception as e:
+                            print("Error fetching experiments", e)
+                            experiement_retries += 1
+                            sleep = True
+                            # If it fails for over 1 minute, raise an exception
+                            if experiement_retries > 20:
+                                raise
+                        
                         if sleep:
                             print("=== Sleeping for 5 seconds")
                             time.sleep(5)
