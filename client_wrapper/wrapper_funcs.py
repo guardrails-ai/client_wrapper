@@ -13,7 +13,7 @@
 
 import os
 from dataclasses import asdict
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 from logging import getLogger
 
 import time
@@ -42,14 +42,14 @@ def _get_token() -> str:
 
 class TestProcessor:
     def __init__(
-        self, control_plane_host: str, generator_host: str, max_workers: int = 5
+        self, control_plane_host: str, generator_host: str, max_workers: Optional[int] = None
     ):
         self.control_plane_host = control_plane_host
         self.generator_host = generator_host
         self.processing_queue = Queue()
         self.queued_tests: Dict[str, bool] = {}
         self.should_stop = False
-        self.max_workers = max_workers
+        self.max_workers = max_workers or min(32, (os.cpu_count() or 1) + 4)
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.processing_thread = None
 
@@ -109,7 +109,7 @@ def tt_webhook_polling_sync(
     enable: bool,
     control_plane_host: str = CONTROL_PLANE_URL,
     generator_host: str = GENERATION_URL,
-    max_workers: int = 100,  # Controls max concurrency
+    max_workers: Optional[int] = None,  # Controls max concurrency
 ) -> Callable:
     processor = TestProcessor(control_plane_host, generator_host, max_workers)
     def wrap(fn: Callable[[str, ...], str]) -> Callable:
