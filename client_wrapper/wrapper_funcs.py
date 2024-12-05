@@ -84,8 +84,11 @@ class TestProcessor:
                 persona=test_data["persona"],
             )
 
+            experiment_id = test_data["experiment_id"]
+            test_id = test_data["id"]
+
             requests.put(
-                f"{self.control_plane_host}/api/tests/{test_data['id']}",
+                f"{self.control_plane_host}/api/experiments/{experiment_id}/tests/{test_id}",
                 json=asdict(report),
                 headers={"x-api-key": _get_api_key()},
             )
