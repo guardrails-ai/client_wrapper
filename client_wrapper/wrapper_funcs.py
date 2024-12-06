@@ -208,6 +208,7 @@ def tt_webhook_polling_sync(
                                                 "id": test_id,
                                                 "prompt": test["prompt"],
                                                 "persona": test["persona"],
+                                                "experiment_id": experiment["id"],
                                             }
                                         )
                         except Exception as e:
