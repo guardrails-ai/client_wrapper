@@ -34,8 +34,10 @@ LOGGER = getLogger(__name__)
 last_successful_test = None
 
 
-def _get_token() -> str:
-    return os.environ.get("GUARDRAILS_WEBHOOK_TOKEN", "hunter2")
+def _get_app_id(application_id: Optional[str] = None) -> str:
+    if application_id:
+        return application_id
+    return os.environ.get("GUARDRAILS_APP_ID", "")
 
 def _get_api_key() -> str:
     api_key = os.environ.get("GUARDRAILS_TOKEN")
@@ -46,7 +48,7 @@ def _get_api_key() -> str:
 
 class TestProcessor:
     def __init__(
-        self, control_plane_host: str, max_workers: Optional[int] = None
+        self, control_plane_host: str, max_workers: Optional[int] = None, application_id: Optional[str] = None
     ):
         self.control_plane_host = control_plane_host
         self.processing_queue = Queue()
@@ -55,6 +57,7 @@ class TestProcessor:
         self.max_workers = max_workers or min(32, (os.cpu_count() or 1) + 4)
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.processing_thread = None
+        self.application_id = application_id
 
     def start_processing(self, fn: Callable[[str, ...], str]):
         """Start the background processing thread"""
@@ -78,7 +81,7 @@ class TestProcessor:
 
             report = Report(
                 id=test_data["id"],
-                token=_get_token(),
+                appId=_get_app_id(),
                 prompt=test_data["prompt"],
                 response=response,
                 persona=test_data["persona"],
@@ -116,8 +119,9 @@ def tt_webhook_polling_sync(
     enable: bool,
     control_plane_host: str = CONTROL_PLANE_URL,
     max_workers: Optional[int] = None,  # Controls max concurrency
+    application_id: Optional[str] = None,
 ) -> Callable:
-    processor = TestProcessor(control_plane_host, max_workers)
+    processor = TestProcessor(control_plane_host, max_workers, application_id=application_id)
     def wrap(fn: Callable[[str, ...], str]) -> Callable:
         def wrapped(*args, **kwargs):
             if enable:
@@ -128,7 +132,7 @@ def tt_webhook_polling_sync(
                     while True:
                         print("===> Starting...")
                         try:
-                            connection_tests_url = f"{control_plane_host}/api/connection-tests?status=pending&token={_get_token()}"
+                            connection_tests_url = f"{control_plane_host}/api/connection-tests?status=pending&appId={_get_app_id(application_id)}"
                             print(f"Fetching connection tests from {connection_tests_url}")
                             response = requests.get(
                                 connection_tests_url,
@@ -143,11 +147,11 @@ def tt_webhook_polling_sync(
                                 try:
                                     response = fn(test["prompt"])
                                     requests.patch(
-                                        f"{control_plane_host}/api/connection-tests/{test['id']}",
+                                        f"{control_plane_host}/api/connection-tests/{test['id']}?appId={_get_app_id(application_id)}",
                                         json={
                                             "response": response,
                                             "status": "completed",
-                                            "executed_by": _get_token(),
+                                            "executed_by": _get_app_id(application_id),
                                             "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                                         },
                                         headers={"x-api-key": _get_api_key()},
@@ -155,10 +159,10 @@ def tt_webhook_polling_sync(
                                 except Exception as e:
                                     print("Error processing connection test", e)
                                     requests.patch(
-                                        f"{control_plane_host}/api/connection-tests/{test['id']}",
+                                        f"{control_plane_host}/api/connection-tests/{test['id']}?appId={_get_app_id(application_id)}",
                                         json={
                                             "status": "failed",
-                                            "executed_by": _get_token(),
+                                            "executed_by": _get_app_id(application_id),
                                             "failed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                                             "error": str(e),
                                         },
@@ -175,7 +179,7 @@ def tt_webhook_polling_sync(
                         sleep = False
                         try:
                             experiments_response = requests.get(
-                                f"{control_plane_host}/api/experiments?token={_get_token()}",
+                                f"{control_plane_host}/api/experiments?appId={_get_app_id(application_id)}",
                                 headers={"x-api-key": _get_api_key()},
                             )
 
