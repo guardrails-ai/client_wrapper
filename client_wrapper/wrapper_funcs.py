@@ -91,7 +91,7 @@ class TestProcessor:
             test_id = test_data["id"]
 
             requests.put(
-                f"{self.control_plane_host}/api/experiments/{experiment_id}/tests/{test_id}?appId={_get_app_id()}",
+                f"{self.control_plane_host}/api/experiments/{experiment_id}/tests/{test_id}?appId={_get_app_id(self.application_id)}",
                 json=asdict(report),
                 headers={"x-api-key": _get_api_key()},
             )
@@ -195,7 +195,7 @@ def tt_webhook_polling_sync(
                                     f"=== checking for tests for experiment {experiment['id']}"
                                 )
                                 tests = requests.get(
-                                    f"{control_plane_host}/api/experiments/{experiment['id']}/tests?appId={_get_app_id()}",
+                                    f"{control_plane_host}/api/experiments/{experiment['id']}/tests?appId={_get_app_id(application_id)}",
                                     headers={"x-api-key": _get_api_key()},
                                 ).json()
 
