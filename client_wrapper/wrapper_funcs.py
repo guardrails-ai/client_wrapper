@@ -83,7 +83,7 @@ class TestProcessor:
 
             report = Report(
                 id=test_data["id"],
-                appId=_get_app_id(),
+                appId=_get_app_id(self.application_id),
                 prompt=test_data["prompt"],
                 response=response,
                 persona=test_data["persona"],
