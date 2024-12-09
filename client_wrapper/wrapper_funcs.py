@@ -37,7 +37,9 @@ last_successful_test = None
 def _get_app_id(application_id: Optional[str] = None) -> str:
     if application_id:
         return application_id
-    return os.environ.get("GUARDRAILS_APP_ID", "")
+    application_id = os.environ.get("GUARDRAILS_APP_ID")
+    if not application_id:
+        raise ValueError("GUARDRAILS_APP_ID is not set!")
 
 def _get_api_key() -> str:
     api_key = os.environ.get("GUARDRAILS_TOKEN")

@@ -24,7 +24,7 @@ class WebhookCommandEnum(Enum):
 @dataclass
 class Report:
     id: str
-    token: str
+    appId: str
     prompt: str
     response: str
     persona: Optional[str] = ""
