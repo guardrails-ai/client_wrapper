@@ -5,7 +5,7 @@ from litellm import litellm
 
 CONTROL_PLANE_URL = os.getenv("CONTROL_PLANE_URL", "http://gr-threat-tester-demo-ctrl-svc.gr-threat-tester-demo.priv.local:8080")
 
-@tt_webhook_polling_sync(enable=True, control_plane_host=CONTROL_PLANE_URL)
+@tt_webhook_polling_sync(enable=True, control_plane_host=CONTROL_PLANE_URL, application_id="example")
 def generate_with_huge_llm(prompt: str) -> str:
     print(f"Running generate_with_huge_llm: {prompt}")
     res = litellm.completion(
