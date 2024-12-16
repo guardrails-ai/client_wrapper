@@ -124,6 +124,7 @@ def tt_webhook_polling_sync(
     max_workers: Optional[int] = None,  # Controls max concurrency
     application_id: Optional[str] = None,
 ) -> Callable:
+    print("===> Initializing TestProcessor with application_id: ", application_id)
     processor = TestProcessor(control_plane_host, max_workers, application_id=application_id)
     def wrap(fn: Callable[[str, ...], str]) -> Callable:
         def wrapped(*args, **kwargs):
