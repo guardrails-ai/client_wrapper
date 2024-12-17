@@ -50,7 +50,11 @@ def _get_api_key() -> str:
 
 class TestProcessor:
     def __init__(
-        self, control_plane_host: str, max_workers: Optional[int] = None, application_id: Optional[str] = None
+        self,
+        control_plane_host: str,
+        max_workers: Optional[int] = None,
+        application_id: Optional[str] = None,
+        throttle_time: Optional[float] = None
     ):
         self.control_plane_host = control_plane_host
         self.processing_queue = Queue()
@@ -60,6 +64,7 @@ class TestProcessor:
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.processing_thread = None
         self.application_id = application_id
+        self.throttle_time = throttle_time
 
     def start_processing(self, fn: Callable[[str, ...], str]):
         """Start the background processing thread"""
@@ -114,6 +119,8 @@ class TestProcessor:
                 # Submit the test processing to the thread pool
                 self.executor.submit(self._process_test, test_data, fn)
                 self.processing_queue.task_done()
+                if self.throttle_time is not None:
+                    time.sleep(self.throttle_time)
             except Exception as e:
                 print(f"Error submitting test to thread pool: {e}")
 
@@ -123,9 +130,10 @@ def tt_webhook_polling_sync(
     control_plane_host: str = CONTROL_PLANE_URL,
     max_workers: Optional[int] = None,  # Controls max concurrency
     application_id: Optional[str] = None,
+    throttle_time: Optional[float] = None # Time in seconds to pause between each request to the wrapped function
 ) -> Callable:
     print("===> Initializing TestProcessor with application_id: ", application_id)
-    processor = TestProcessor(control_plane_host, max_workers, application_id=application_id)
+    processor = TestProcessor(control_plane_host, max_workers, application_id=application_id, throttle_time=throttle_time)
     def wrap(fn: Callable[[str, ...], str]) -> Callable:
         def wrapped(*args, **kwargs):
             if enable:
@@ -160,6 +168,8 @@ def tt_webhook_polling_sync(
                                         },
                                         headers={"x-api-key": _get_api_key()},
                                     )
+                                    if throttle_time is not None:
+                                        time.sleep(throttle_time)
                                 except Exception as e:
                                     print("Error processing connection test", e)
                                     requests.patch(
