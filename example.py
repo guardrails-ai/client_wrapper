@@ -5,15 +5,12 @@ from litellm import litellm
 
 CONTROL_PLANE_URL = os.getenv("CONTROL_PLANE_URL", "http://gr-threat-tester-demo-ctrl-svc.gr-threat-tester-demo.priv.local:8080")
 
-@tt_webhook_polling_sync(enable=True, control_plane_host=CONTROL_PLANE_URL, application_id="example")
-def generate_with_huge_llm(prompt: str) -> str:
-    print(f"Running generate_with_huge_llm: {prompt}")
+@tt_webhook_polling_sync(enable=True, control_plane_host=CONTROL_PLANE_URL, application_id="fdec9100-7228-4f40-9bff-93004fc42b8e")
+def generate_with_huge_llm(messages) -> str:
+    print(f"Running generate_with_huge_llm: {messages}")
     res = litellm.completion(
         model="gpt-4o-mini",
-        messages=[{
-            "role": "user",
-            "content": prompt
-        }]
+        messages=messages
     )
     return res.choices[0].message.content
 
