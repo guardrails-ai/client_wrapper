@@ -84,7 +84,32 @@ class TestProcessor:
     def _process_test(self, test_data: dict, fn: Callable[[str, ...], str]):
         """Process a single test"""
         try:
-            response = fn(test_data["prompt"])
+            parent_id = requests.get(
+                f"{CONTROL_PLANE_URL}/api/experiments/{test_data['experiment_id']}/tests/{test_data['id']}",
+                headers={"x-api-key": _get_api_key()},
+            ).json()['parent_test_id']
+
+            message_history = [{
+                "role": "user",
+                "content": test_data['prompt']
+            }]
+            while parent_id:
+                # get parent test
+                parent_test = requests.get(
+                    f"{CONTROL_PLANE_URL}/api/experiments/{test_data['experiment_id']}/tests/{parent_id}",
+                    headers={"x-api-key": _get_api_key()},
+                ).json()
+                parent_id = parent_test['parent_test_id']
+                message_history.insert(0, {
+                    "role": "assistant",
+                    "content": parent_test['response']
+                })
+                message_history.insert(0, {
+                    "role": "user",
+                    "content": parent_test['prompt']
+                })
+                
+            response = fn(message_history)
 
             report = Report(
                 id=test_data["id"],
@@ -157,7 +182,10 @@ def tt_webhook_polling_sync(
                             pending_connection_tests = response.json()
                             for test in pending_connection_tests:
                                 try:
-                                    response = fn(test["prompt"])
+                                    response = fn([{
+                                        "role": "user",
+                                        "content": test["prompt"]
+                                    }])
                                     requests.patch(
                                         f"{control_plane_host}/api/connection-tests/{test['id']}?appId={_get_app_id(application_id)}",
                                         json={
