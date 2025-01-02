@@ -40,6 +40,7 @@ def _get_app_id(application_id: Optional[str] = None) -> str:
     application_id = os.environ.get("GUARDRAILS_APP_ID")
     if not application_id:
         raise ValueError("GUARDRAILS_APP_ID is not set!")
+    return application_id
 
 def _get_api_key() -> str:
     api_key = os.environ.get("GUARDRAILS_TOKEN")
