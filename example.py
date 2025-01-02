@@ -3,9 +3,9 @@ import os
 from client_wrapper import tt_webhook_polling_sync
 from litellm import litellm
 
-CONTROL_PLANE_URL = os.getenv("CONTROL_PLANE_URL", "http://gr-threat-tester-demo-ctrl-svc.gr-threat-tester-demo.priv.local:8080")
+CONTROL_PLANE_URL = os.getenv("CONTROL_PLANE_URL", "http://gr-threat-tester-prod-ctrl-svc.gr-threat-tester-prod.priv.local:8080")
 
-@tt_webhook_polling_sync(enable=True, control_plane_host=CONTROL_PLANE_URL, application_id="fdec9100-7228-4f40-9bff-93004fc42b8e")
+@tt_webhook_polling_sync(enable=True, control_plane_host=CONTROL_PLANE_URL)
 def generate_with_huge_llm(messages) -> str:
     print(f"Running generate_with_huge_llm: {messages}")
     res = litellm.completion(
