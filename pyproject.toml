@@ -1,10 +1,18 @@
-[project]
-name = "client_wrapper"
+[tool.poetry]
+name = "guardrails-ai-sim-client"
 version = "0.1.0"
+authors = ["Guardrails AI <contact@guardrailsai.com>"]
+license = "Apache License 2.0"
+
 description = "client wrapper for usage with llm experiment"
-requires-python = ">=3.8"
 readme = "README.md"
-license = {text = "MIT"}
-dependencies = [
-    "requests>=2.31.0",
+packages = [
+    { include = "guardrails_sim_client", from = "." }
 ]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = ">=2.31.0"
+
+[[tool.poetry.source]]
+name = "PyPI"
