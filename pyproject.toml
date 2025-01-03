@@ -5,3 +5,6 @@ description = "client wrapper for usage with llm experiment"
 requires-python = ">=3.8"
 readme = "README.md"
 license = {text = "MIT"}
+dependencies = [
+    "requests>=2.31.0",
+]
