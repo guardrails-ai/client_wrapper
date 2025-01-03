@@ -1,24 +1,10 @@
-#!/usr/bin/env python
-
-# Client-side socket python wrapper + code-level annotation
-# Sample:
-# #my_py.py
-# from client_wrapper import tt_webhook_polling_sync
-# @tt_webhook_polling_sync
-# def some_func(prompt):
-# 		# YOUR EXISTING LLM LOGIC
-#
-# 		# SOME STRING RESULT
-# 		return res
-
 import os
 from dataclasses import asdict
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 from logging import getLogger
 
 import time
 import requests
-from websockets.sync.client import connect as sync_connect
 from concurrent.futures import ThreadPoolExecutor
 
 from queue import Queue
@@ -67,7 +53,7 @@ class TestProcessor:
         self.application_id = application_id
         self.throttle_time = throttle_time
 
-    def start_processing(self, fn: Callable[[str, ...], str]):
+    def start_processing(self, fn: Callable[[str, *tuple[Any, ...]], str]):
         """Start the background processing thread"""
         self.should_stop = False
         self.processing_thread = threading.Thread(
@@ -82,7 +68,7 @@ class TestProcessor:
             self.processing_thread.join()
         self.executor.shutdown(wait=True)
 
-    def _process_test(self, test_data: dict, fn: Callable[[str, ...], str]):
+    def _process_test(self, test_data: dict, fn: Callable[[str, *tuple[Any, ...]], str]):
         """Process a single test"""
         try:
             parent_id = requests.get(
@@ -135,7 +121,7 @@ class TestProcessor:
             # Remove from queued tests after processing (success or failure)
             self.queued_tests.pop(test_data["id"], None)
 
-    def _process_queue(self, fn: Callable[[str, ...], str]):
+    def _process_queue(self, fn: Callable[[str, *tuple[Any, ...]], str]):
         """Background thread that manages concurrent test processing"""
         while not self.should_stop:
             try:
@@ -160,7 +146,7 @@ def tt_webhook_polling_sync(
 ) -> Callable:
     print("===> Initializing TestProcessor with application_id: ", application_id)
     processor = TestProcessor(control_plane_host, max_workers, application_id=application_id, throttle_time=throttle_time)
-    def wrap(fn: Callable[[str, ...], str]) -> Callable:
+    def wrap(fn: Callable[[str, *tuple[Any, ...]], str]) -> Callable:
         def wrapped(*args, **kwargs):
             if enable:
                 processor.start_processing(fn)
