@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "guardrails-ai-sim-client"
+name = "guardrails-ai-simlab-client"
 version = "0.1.0"
 authors = ["Guardrails AI <contact@guardrailsai.com>"]
 license = "Apache License 2.0"
@@ -7,7 +7,7 @@ license = "Apache License 2.0"
 description = "client wrapper for usage with llm experiment"
 readme = "README.md"
 packages = [
-    { include = "guardrails_sim_client", from = "." }
+    { include = "guardrails_simlab_client", from = "." }
 ]
 
 [tool.poetry.dependencies]
