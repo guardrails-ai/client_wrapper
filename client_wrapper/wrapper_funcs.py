@@ -1,5 +1,6 @@
 import os
 from dataclasses import asdict
+import re
 from typing import Any, Callable, Dict, Optional
 from logging import getLogger
 
@@ -29,9 +30,22 @@ def _get_app_id(application_id: Optional[str] = None) -> str:
     return application_id
 
 def _get_api_key() -> str:
+    home_filepath = os.path.expanduser("~")
+    guardrails_rc_filepath = os.path.join(home_filepath, ".guardrailsrc")
+
     api_key = os.environ.get("GUARDRAILS_TOKEN")
+
+    if not api_key and os.path.exists(guardrails_rc_filepath):
+        with open(guardrails_rc_filepath, "r") as f:
+            for line in f:
+                match = re.match(r"token\s*=\s*(?P<api_key>.+)", line)
+                if match:
+                    api_key  = match.group("api_key").strip() 
+                    break
+    
     if not api_key:
-        raise ValueError("GUARDRAILS_TOKEN is not set!")
+        raise ValueError("GUARDRAILS_TOKEN environment variable is not set or found in $HOME/.guardrailsrc")
+
     return api_key
 
 
@@ -53,7 +67,7 @@ class TestProcessor:
         self.application_id = application_id
         self.throttle_time = throttle_time
 
-    def start_processing(self, fn: Callable[[str, *tuple[Any, ...]], str]):
+    def start_processing(self, fn: Callable[[str, ...], str]):
         """Start the background processing thread"""
         self.should_stop = False
         self.processing_thread = threading.Thread(
@@ -68,7 +82,7 @@ class TestProcessor:
             self.processing_thread.join()
         self.executor.shutdown(wait=True)
 
-    def _process_test(self, test_data: dict, fn: Callable[[str, *tuple[Any, ...]], str]):
+    def _process_test(self, test_data: dict, fn: Callable[[str, ...], str]):
         """Process a single test"""
         try:
             parent_id = requests.get(
@@ -121,7 +135,7 @@ class TestProcessor:
             # Remove from queued tests after processing (success or failure)
             self.queued_tests.pop(test_data["id"], None)
 
-    def _process_queue(self, fn: Callable[[str, *tuple[Any, ...]], str]):
+    def _process_queue(self, fn: Callable[[str, ...], str]):
         """Background thread that manages concurrent test processing"""
         while not self.should_stop:
             try:
@@ -146,7 +160,7 @@ def tt_webhook_polling_sync(
 ) -> Callable:
     print("===> Initializing TestProcessor with application_id: ", application_id)
     processor = TestProcessor(control_plane_host, max_workers, application_id=application_id, throttle_time=throttle_time)
-    def wrap(fn: Callable[[str, *tuple[Any, ...]], str]) -> Callable:
+    def wrap(fn: Callable[[str, ...], str]) -> Callable:
         def wrapped(*args, **kwargs):
             if enable:
                 processor.start_processing(fn)
