@@ -1,0 +1,30 @@
+name: Release PyPi Version
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11.x
+
+      - name: Poetry cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-cache--ubuntu-latest--guardrails-ai-sim-client
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Upload to PyPI
+        run: |
+          poetry publish --build -u __token__ -p ${{ secrets.PYPI_PASSWORD }}
