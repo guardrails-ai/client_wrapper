@@ -1,17 +1,37 @@
-# Client-side Socket Python Wrapper + Code-level Annotation
+# Sim Lab Client SDK
 
-This document provides an example of how to use the client-side socket Python wrapper with code-level annotation.
+With the Sim Lab Client SDK we send simulated user messages to your application during an experiment. 
+
+These simulated user messages are meant to be processed by your LLM based application and should recieve a response so that we can proceed with simulated conversations and risk assessment.
+
+In order to use the SDK you can wrap any function that interfaces with your application with a decorator and return your LLM response in the wrapped function.
 
 ## Sample Usage
-
-### my_py.py
 
 ```python
 from client_wrapper import tt_webhook_polling_sync
 
-@tt_webhook_polling_sync(enable=True, control_plane_host="http://localhost:8080")
-def some_func(prompt):
-    # YOUR EXISTING LLM LOGIC
+@tt_webhook_polling_sync(enable=True)
+def my_application_interface(user_message):
+    # Your existing logic
+    # 1. Call LLM API directly
+    # 2. HTTP call to your application
+    
+    # Lastly, return LLM application response
 
-    # SOME STRING RESULT
-    return res
+    # Example using litellm
+    import litellm
+    res = litellm.completion(
+        model="gpt-4o-mini",
+        messages=[{ "role": "user", "content": user_message }]
+    )
+    return res.choices[0].message.content
+```
+
+When using one of our specific preview environments one can override our server's URL with:
+
+```python
+@tt_webhook_polling_sync(enable=True, control_plane_host="http://...")
+def my_application_interface(user_message):
+    ...
+```
