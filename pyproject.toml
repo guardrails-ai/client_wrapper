@@ -8,5 +8,5 @@ description = "client wrapper for usage with llm experiment"
 readme = "README.md"
 requires-python = ">= 3.9"
 dependencies = [
-    "requests = ">=2.31.0"
+    "requests>=2.31.0"
 ]
