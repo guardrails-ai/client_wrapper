@@ -1,24 +1,11 @@
-#!/usr/bin/env python
-
-# Client-side socket python wrapper + code-level annotation
-# Sample:
-# #my_py.py
-# from client_wrapper import tt_webhook_polling_sync
-# @tt_webhook_polling_sync
-# def some_func(prompt):
-# 		# YOUR EXISTING LLM LOGIC
-#
-# 		# SOME STRING RESULT
-# 		return res
-
 import os
 from dataclasses import asdict
-from typing import Callable, Dict, Optional
+import re
+from typing import Any, Callable, Dict, Optional
 from logging import getLogger
 
 import time
 import requests
-from websockets.sync.client import connect as sync_connect
 from concurrent.futures import ThreadPoolExecutor
 
 from queue import Queue
@@ -43,9 +30,22 @@ def _get_app_id(application_id: Optional[str] = None) -> str:
     return application_id
 
 def _get_api_key() -> str:
+    home_filepath = os.path.expanduser("~")
+    guardrails_rc_filepath = os.path.join(home_filepath, ".guardrailsrc")
+
     api_key = os.environ.get("GUARDRAILS_TOKEN")
+
+    if not api_key and os.path.exists(guardrails_rc_filepath):
+        with open(guardrails_rc_filepath, "r") as f:
+            for line in f:
+                match = re.match(r"token\s*=\s*(?P<api_key>.+)", line)
+                if match:
+                    api_key  = match.group("api_key").strip() 
+                    break
+    
     if not api_key:
-        raise ValueError("GUARDRAILS_TOKEN is not set!")
+        raise ValueError("GUARDRAILS_TOKEN environment variable is not set or found in $HOME/.guardrailsrc")
+
     return api_key
 
 

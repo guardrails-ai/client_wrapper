@@ -1,7 +1,12 @@
 [project]
-name = "client_wrapper"
+name = "guardrails-ai-simlab-client"
 version = "0.1.0"
+authors = ["Guardrails AI <contact@guardrailsai.com>"]
+license = {file = "LICENSE"}
+
 description = "client wrapper for usage with llm experiment"
-requires-python = ">=3.8"
 readme = "README.md"
-license = {text = "MIT"}
+requires-python = ">= 3.9"
+dependencies = [
+    "requests>=2.31.0"
+]
