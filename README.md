@@ -6,6 +6,17 @@ These simulated user messages are meant to be processed by your LLM based applic
 
 In order to use the SDK you can wrap any function that interfaces with your application with a decorator and return your LLM response in the wrapped function.
 
+## Installation
+
+```bash
+# Paste Guardrails Client or extract from guardrailsrc
+export GUARDRAILS_TOKEN=$(cat ~/.guardrailsrc| awk -F 'token=' '{print $2}' | awk '{print $1}' | tr -d '\n')
+
+# Install client
+pip install -U --index-url="https://__token__:$GUARDRAILS_TOKEN@pypi.guardrailsai.com/simple" \
+    --extra-index-url="https://pypi.org/simple" guardrails-grhub-simlab-client
+```
+
 ## Sample Usage
 
 ```python
