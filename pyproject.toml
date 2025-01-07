@@ -1,4 +1,4 @@
-[tool.poetry]
+[project]
 name = "guardrails-ai-simlab-client"
 version = "0.1.0"
 authors = ["Guardrails AI <contact@guardrailsai.com>"]
@@ -6,13 +6,7 @@ license = "MIT"
 
 description = "client wrapper for usage with llm experiment"
 readme = "README.md"
-packages = [
-    { include = "guardrails_simlab_client", from = "." }
+requires-python = ">= 3.9"
+dependencies = [
+    "requests = ">=2.31.0"
 ]
-
-[tool.poetry.dependencies]
-python = "^3.9"
-requests = ">=2.31.0"
-
-[[tool.poetry.source]]
-name = "PyPI"
