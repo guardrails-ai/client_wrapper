@@ -1,30 +1,17 @@
-name: Release PyPi Version
+name: Publish to Guardrails Hub
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  release:
+  setup:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Build & Deploy
+        uses: guardrails-ai/guardrails/.github/actions/validator_pypi_publish@main
         with:
-          python-version: 3.11.x
-
-      - name: Poetry cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pypoetry
-          key: poetry-cache--ubuntu-latest--guardrails-ai-sim-client
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-
-      - name: Upload to PyPI
-        run: |
-          poetry publish --build -u __token__ -p ${{ secrets.PYPI_PASSWORD }}
+          guardrails_token: ${{ secrets.GR_GUARDRAILS_TOKEN }}
+          validator_id: guardrails/simlab_client
