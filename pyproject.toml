@@ -2,7 +2,7 @@
 name = "guardrails-ai-simlab-client"
 version = "0.1.0"
 authors = ["Guardrails AI <contact@guardrailsai.com>"]
-license = "MIT"
+license = {file = "LICENSE"}
 
 description = "client wrapper for usage with llm experiment"
 readme = "README.md"
