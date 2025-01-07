@@ -15,3 +15,4 @@ jobs:
         with:
           guardrails_token: ${{ secrets.GR_GUARDRAILS_TOKEN }}
           validator_id: guardrails/simlab_client
+          package_directory: 'client_wrapper'
