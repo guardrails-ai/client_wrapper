@@ -20,7 +20,7 @@ pip install -U --index-url="https://__token__:$GUARDRAILS_TOKEN@pypi.guardrailsa
 ## Sample Usage
 
 ```python
-from client_wrapper import tt_webhook_polling_sync
+from guardrails_grhub_simlab_client import tt_webhook_polling_sync
 
 @tt_webhook_polling_sync(enable=True)
 def my_application_interface(user_message):
