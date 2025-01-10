@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Dict, Optional
 
 @dataclass
 class Report:
@@ -22,3 +22,9 @@ class GeneratorPrompt:
     id: str
     prompt: str
     persona: Optional[str] = ""
+
+@dataclass
+class JudgeResult:
+    is_triggered: bool
+    justification: Optional[str] = None
+    tags: Optional[Dict[str, str]] = None
