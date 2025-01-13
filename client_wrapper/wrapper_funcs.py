@@ -190,7 +190,7 @@ def tt_webhook_polling_sync(
                         sleep = False
                         try:
                             experiments_response = requests.get(
-                                f"{control_plane_host}/api/experiments?appId={_get_app_id(application_id)}",
+                                f"{control_plane_host}/api/experiments?appId={_get_app_id(application_id)}&evaluated=false",
                                 headers={"x-api-key": _get_api_key()},
                             )
 
@@ -198,7 +198,7 @@ def tt_webhook_polling_sync(
                                 print("Error fetching experiments", experiments_response.text)
                                 raise Exception("Error fetching experiments, task is not healthy")
                             experiments = experiments_response.json()
-                            print(f"=== Found {len(experiments)} experiments")
+                            print(f"=== Found {len(experiments)} unevaluated experiments")
                             sleep = True
 
                             for experiment in experiments:
