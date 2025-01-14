@@ -37,7 +37,7 @@ def custom_judge(
         fn: Callable[[str, str], JudgeResult]
     ) -> Callable[[str, str], JudgeResult]:
         def wrapped(*args, **kwargs):
-            LOGGER.debug(f"===> Wrapped function called with args: f{args}")
+            LOGGER.debug(f"===> Wrapped function called with args: {args}")
             if enable:
                 LOGGER.debug("===> Starting processing")
                 processor.start_processing(fn)
