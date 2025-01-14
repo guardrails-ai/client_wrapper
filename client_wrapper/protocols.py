@@ -25,6 +25,6 @@ class GeneratorPrompt:
 
 @dataclass
 class JudgeResult:
-    is_triggered: bool
+    triggered: bool
     justification: Optional[str] = None
     tags: Optional[Dict[str, str]] = None

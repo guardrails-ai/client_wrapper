@@ -6,11 +6,9 @@ from urllib.parse import quote_plus
 import requests
 from client_wrapper.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
 from client_wrapper.protocols import JudgeResult
+from client_wrapper.processors.risk_evaluation_processor import RiskEvaluationProcessor
 
 LOGGER = getLogger(__name__)
-
-from client_wrapper.classes.judge_result import JudgeResult
-from client_wrapper.processors.risk_evaluation_processor import RiskEvaluationProcessor
 
 def custom_judge(
     *,

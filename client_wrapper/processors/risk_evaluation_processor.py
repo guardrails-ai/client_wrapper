@@ -91,7 +91,7 @@ class RiskEvaluationProcessor:
                         "test_id": test_id,
                         "judge_prompt": "", # does this need to be set?
                         "judge_response": judge_response.justification,
-                        "risk_type": judge_response.risk,
+                        "risk_type": risk_name,
                         "risk_triggered": judge_response.triggered,
                         },
                     headers={"x-api-key": _get_api_key()},
