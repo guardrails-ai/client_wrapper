@@ -84,7 +84,7 @@ class RiskEvaluationProcessor:
             )
 
             LOGGER.debug(f"Risk evaluation result: {judge_response}")
-            # TODO: Post a Risk Evaluation
+            # Post a Risk Evaluation
             risk_evaluation = requests.post(
                     f"{self.control_plane_host}/api/experiments/{experiment_id}/tests/{test_id}/evaluations?appId={_get_app_id(self.application_id)}",
                     json={
