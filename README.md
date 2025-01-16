@@ -17,7 +17,7 @@ pip install -U --index-url="https://__token__:$GUARDRAILS_TOKEN@pypi.guardrailsa
     --extra-index-url="https://pypi.org/simple" guardrails-grhub-simlab-client
 ```
 
-## Sample Usage
+## Sample llm Usage
 
 ```python
 from guardrails_grhub_simlab_client import tt_webhook_polling_sync
@@ -46,3 +46,32 @@ When using one of our specific preview environments one can override our server'
 def my_application_interface(user_message):
     ...
 ```
+
+## Sample custom judge usage
+```python
+from guardrails_grhub_simlab_client import custom_judge, JudgeResult
+
+@custom_judge(risk_name="Toxic Language", enable=True, application_id="41bddba7-feaf-40e2-ba28-9daf22a1ec71")
+def custom_judge_fn(
+    risk_name: str,
+    experiment_id: str,
+    test_id: str,
+    user_message: str,
+    bot_response: str
+    ) -> str:
+    # Your existing logic
+    # 1. Call custom LLM judge API directly
+    # 2. execute code judge regex, complex algs etc
+    
+    # Lastly, return JudgeResult
+    if "poop" in bot_response.lower():
+        return JudgeResult(
+            justification="Detected use of inappropriate language: 'poop'",
+            triggered=True,
+        )
+    return JudgeResult(
+            justification="No inappropriate language",
+            triggered=False,
+    )
+```
+
