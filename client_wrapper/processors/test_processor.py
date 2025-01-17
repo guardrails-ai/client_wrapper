@@ -53,7 +53,7 @@ class TestProcessor:
         """Process a single test"""
         try:
             parent_id = requests.get(
-                f"{CONTROL_PLANE_URL}/api/experiments/{test_data['experiment_id']}/tests/{test_data['id']}",
+                f"{self.control_plane_host}/api/experiments/{test_data['experiment_id']}/tests/{test_data['id']}",
                 headers={"x-api-key": _get_api_key()},
             ).json()['parent_test_id']
 
@@ -64,7 +64,7 @@ class TestProcessor:
             while parent_id:
                 # get parent test
                 parent_test = requests.get(
-                    f"{CONTROL_PLANE_URL}/api/experiments/{test_data['experiment_id']}/tests/{parent_id}",
+                    f"{self.control_plane_host}/api/experiments/{test_data['experiment_id']}/tests/{parent_id}",
                     headers={"x-api-key": _get_api_key()},
                 ).json()
                 parent_id = parent_test['parent_test_id']
