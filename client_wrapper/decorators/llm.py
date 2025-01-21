@@ -96,7 +96,7 @@ def tt_webhook_polling_sync(
                                     f"=== checking for tests for experiment {experiment['id']}"
                                 )
                                 tests = requests.get(
-                                    f"{control_plane_host}/api/experiments/{experiment['id']}/tests?appId={_get_app_id(application_id)}",
+                                    f"{control_plane_host}/api/experiments/{experiment['id']}/tests?appId={_get_app_id(application_id)}&include-risk-evaluations=false&limit={max_workers*2}&unprocessed-only=true",
                                     headers={"x-api-key": _get_api_key()},
                                 ).json()
 
