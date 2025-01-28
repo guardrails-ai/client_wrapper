@@ -52,10 +52,12 @@ class TestProcessor:
     def _process_test(self, test_data: dict, fn: Callable[[str, ...], str]):
         """Process a single test"""
         try:
-            parent_id = requests.get(
+            test = requests.get(
                 f"{self.control_plane_host}/api/experiments/{test_data['experiment_id']}/tests/{test_data['id']}",
                 headers={"x-api-key": _get_api_key()},
-            ).json()['parent_test_id']
+            ).json()
+
+            parent_id = test.get('parent_test_id')
 
             message_history = [{
                 "role": "user",
@@ -67,7 +69,7 @@ class TestProcessor:
                     f"{self.control_plane_host}/api/experiments/{test_data['experiment_id']}/tests/{parent_id}",
                     headers={"x-api-key": _get_api_key()},
                 ).json()
-                parent_id = parent_test['parent_test_id']
+                parent_id = parent_test.get('parent_test_id')
                 message_history.insert(0, {
                     "role": "assistant",
                     "content": parent_test['response']
