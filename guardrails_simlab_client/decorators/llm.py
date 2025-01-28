@@ -4,8 +4,8 @@ from logging import getLogger
 import time
 import requests
 
-from client_wrapper.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
-from client_wrapper.processors.test_processor import TestProcessor
+from guardrails_simlab_client.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
+from guardrails_simlab_client.processors.test_processor import TestProcessor
 
 LOGGER = getLogger(__name__)
 

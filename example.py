@@ -1,6 +1,6 @@
 # This is just a utility class that defines and runs the client_wrapper.
 import os
-from client_wrapper import simlab_connect
+from guardrails_simlab_client import simlab_connect
 from litellm import litellm
 
 CONTROL_PLANE_URL = os.getenv("CONTROL_PLANE_URL", "http://gr-threat-tester-prod-ctrl-svc.gr-threat-tester-prod.priv.local:8080")

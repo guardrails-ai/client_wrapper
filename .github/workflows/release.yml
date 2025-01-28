@@ -9,13 +9,39 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-latest
+    env:
+        GUARDRAILS_TOKEN: ${{ secrets.GR_GUARDRAILS_TOKEN }}
+        PYPI_REPOSITORY_URL: 'https://pypi.guardrailsai.com'
     steps:
-      - name: Check out repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
-        
-      - name: Build & Deploy
-        uses: ./.github/actions/validator_pypi_publish
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          guardrails_token: ${{ secrets.GR_GUARDRAILS_TOKEN }}
-          validator_id: guardrails/simlab_client
-          package_directory: 'client_wrapper'
+          python-version: '3.11'
+
+      - name: Install Twine & Build
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install twine build toml
+
+      - name: Create .pypirc
+        shell: bash
+        run: |
+          touch ~/.pypirc
+          echo "[distutils]" >> ~/.pypirc
+          echo "index-servers =" >> ~/.pypirc
+          echo "    private-repository" >> ~/.pypirc
+          echo "" >> ~/.pypirc
+          echo "[private-repository]" >> ~/.pypirc
+          echo "repository = $PYPI_REPOSITORY_URL" >> ~/.pypirc
+          echo "username = __token__" >> ~/.pypirc
+          echo "password = $GUARDRAILS_TOKEN" >> ~/.pypirc
+
+      - name: Build & Upload
+        shell: bash
+        run: |
+          python -m build
+          twine upload dist/* -u __token__ -p $GUARDRAILS_TOKEN -r private-repository
