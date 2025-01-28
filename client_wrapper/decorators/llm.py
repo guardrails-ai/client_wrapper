@@ -92,11 +92,14 @@ def tt_webhook_polling_sync(
                             sleep = True
 
                             for experiment in experiments:
+                                experiment_id = experiment["id"]
+                                limit = processor.max_workers * 2
+                                app_id = _get_app_id(application_id)
                                 print(
-                                    f"=== checking for tests for experiment {experiment['id']}"
+                                    f"=== checking for tests for experiment {experiment_id}"
                                 )
                                 tests = requests.get(
-                                    f"{control_plane_host}/api/experiments/{experiment['id']}/tests?appId={_get_app_id(application_id)}&include-risk-evaluations=false&limit={max_workers*2}&unprocessed-only=true",
+                                    f"{control_plane_host}/api/experiments/{experiment_id}/tests?appId={app_id}&include-risk-evaluations=false&limit={limit}&unprocessed-only=true",
                                     headers={"x-api-key": _get_api_key()},
                                 ).json()
 
