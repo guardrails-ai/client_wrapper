@@ -9,8 +9,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from queue import Queue
 import threading
-from client_wrapper.protocols import Report
-from client_wrapper.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
+from guardrails_simlab_client.protocols import Report
+from guardrails_simlab_client.env import _get_api_key, _get_app_id
 
 LOGGER = getLogger(__name__)
 

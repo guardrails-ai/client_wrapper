@@ -4,9 +4,9 @@ from typing import Callable, Optional
 from urllib.parse import quote_plus
 
 import requests
-from client_wrapper.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
-from client_wrapper.protocols import JudgeResult
-from client_wrapper.processors.risk_evaluation_processor import RiskEvaluationProcessor
+from guardrails_simlab_client.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
+from guardrails_simlab_client.protocols import JudgeResult
+from guardrails_simlab_client.processors.risk_evaluation_processor import RiskEvaluationProcessor
 
 LOGGER = getLogger(__name__)
 

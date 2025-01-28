@@ -14,15 +14,15 @@ export GUARDRAILS_TOKEN=$(cat ~/.guardrailsrc| awk -F 'token=' '{print $2}' | aw
 
 # Install client
 pip install -U --index-url="https://__token__:$GUARDRAILS_TOKEN@pypi.guardrailsai.com/simple" \
-    --extra-index-url="https://pypi.org/simple" guardrails-grhub-simlab-client
+    --extra-index-url="https://pypi.org/simple" guardrails-ai-simlab-client
 ```
 
 ## Sample llm Usage
 
 ```python
-from guardrails_grhub_simlab_client import tt_webhook_polling_sync
+from guardrails_simlab_client import simlab_connect
 
-@tt_webhook_polling_sync(enable=True)
+@simlab_connect(enable=True)
 def my_application_interface(user_message):
     # Your existing logic
     # 1. Call LLM API directly
@@ -42,14 +42,14 @@ def my_application_interface(user_message):
 When using one of our specific preview environments one can override our server's URL with:
 
 ```python
-@tt_webhook_polling_sync(enable=True, control_plane_host="http://...")
+@simlab_connect(enable=True, control_plane_host="http://...")
 def my_application_interface(user_message):
     ...
 ```
 
 ## Sample custom judge usage
 ```python
-from guardrails_grhub_simlab_client import custom_judge, JudgeResult
+from guardrails_simlab_client import custom_judge, JudgeResult
 
 @custom_judge(risk_name="Toxic Language", enable=True, application_id="41bddba7-feaf-40e2-ba28-9daf22a1ec71")
 def custom_judge_fn(

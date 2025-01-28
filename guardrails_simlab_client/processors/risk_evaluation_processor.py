@@ -7,7 +7,7 @@ import time
 from typing import Callable, Dict, Optional
 
 import requests
-from client_wrapper.env import _get_api_key, _get_app_id
+from guardrails_simlab_client.env import _get_api_key, _get_app_id
 
 LOGGER = getLogger(__name__)
 
