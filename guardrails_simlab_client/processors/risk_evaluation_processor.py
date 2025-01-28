@@ -8,6 +8,8 @@ from typing import Callable, Dict, Optional
 
 import requests
 from guardrails_simlab_client.env import _get_api_key, _get_app_id
+from guardrails_simlab_client.protocols import JudgeResult
+
 
 LOGGER = getLogger(__name__)
 
@@ -31,7 +33,7 @@ class RiskEvaluationProcessor:
         self.api_key = _get_api_key()
         self.throttle_time = throttle_time
 
-    def start_processing(self, fn: Callable[[str, ...], str]):
+    def start_processing(self, fn: Callable[[str, str], JudgeResult]):
         """Start the background processing thread"""
         self.should_stop = False
         self.processing_thread = threading.Thread(
@@ -46,7 +48,7 @@ class RiskEvaluationProcessor:
             self.processing_thread.join()
         self.executor.shutdown(wait=True)
 
-    def _process_queue(self, fn: Callable[[str, ...], str]):
+    def _process_queue(self, fn: Callable[[str, str], JudgeResult]):
         """Background thread that manages concurrent test processing"""
         while not self.should_stop:
             try:
@@ -61,7 +63,7 @@ class RiskEvaluationProcessor:
             except Exception as e:
                 LOGGER.debug(f"Error submitting test to thread pool: {e}")
 
-    def _evaluate_risk(self, test_data: Dict[str, str], fn: Callable[[str, ...], str]):
+    def _evaluate_risk(self, test_data: Dict[str, str], fn: Callable[[str, str], JudgeResult]):
         try:
             experiment_id = test_data["experiment_id"]
             test_id = test_data["test_id"]
@@ -75,7 +77,7 @@ class RiskEvaluationProcessor:
             LOGGER.debug(f"user_message: {user_message}, bot_response: {bot_response}")
 
             # Call the Judge function
-            judge_response = fn(
+            judge_response: JudgeResult = fn(
                 experiment_id=experiment_id,
                 test_id=test_id,
                 risk_name=risk_name,
