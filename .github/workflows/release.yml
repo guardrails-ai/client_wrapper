@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build & Deploy
-        uses: guardrails-ai/guardrails/.github/actions/validator_pypi_publish@main
+        uses: ./.github/actions/validator_pypi_publish
         with:
           guardrails_token: ${{ secrets.GR_GUARDRAILS_TOKEN }}
           validator_id: guardrails/simlab_client
