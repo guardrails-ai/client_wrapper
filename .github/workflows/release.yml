@@ -10,6 +10,9 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        
       - name: Build & Deploy
         uses: ./.github/actions/validator_pypi_publish
         with:
