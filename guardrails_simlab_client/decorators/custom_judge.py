@@ -21,8 +21,8 @@ def custom_judge(
         float
     ] = None,  # Time in seconds to pause between each request to the wrapped function
 ) -> Callable:
-    LOGGER.debug(
-        f"===> Initializing TestProcessor with application_id: {application_id}"
+    LOGGER.info(
+        f"===> Initializing RiskEvaluationProcessor with application_id: {application_id}"
     )
     processor = RiskEvaluationProcessor(
         control_plane_host,
@@ -34,16 +34,17 @@ def custom_judge(
     def wrap(
         fn: Callable[[str, str], JudgeResult]
     ) -> Callable[[str, str], JudgeResult]:
+        LOGGER.info(f"===> Wrapping function {fn.__name__}")
         def wrapped(*args, **kwargs):
-            LOGGER.debug(f"===> Wrapped function called with args: {args}")
+            LOGGER.info(f"===> Wrapped function called with args: {args}, kwargs: {kwargs}")
             if enable:
-                LOGGER.debug("===> Starting processing")
+                LOGGER.info("===> Starting processing")
                 processor.start_processing(fn)
                 try:
                     experiment_retries = 0
                     test_retries = 0
                     while True:
-                        LOGGER.debug("===> Starting...")
+                        LOGGER.info("===> Starting...")
                         try:
                             experiments_response = requests.get(
                                 f"{control_plane_host}/api/experiments?appId={_get_app_id(application_id)}&validationStatus=in%20progress",
@@ -51,14 +52,14 @@ def custom_judge(
                             )
 
                             if experiments_response.status_code != 200:
-                                LOGGER.debug("Error fetching experiments", experiments_response.text)
+                                LOGGER.info(f"Error fetching experiments: {experiments_response.text}")
                                 raise Exception("Error fetching experiments, task is not healthy")
                             experiments = experiments_response.json()
-                            LOGGER.debug(f"=== Found {len(experiments)} experiments with validation in progress")
+                            LOGGER.info(f"=== Found {len(experiments)} experiments with validation in progress")
                             # experiments = [{"id": "123"}]
                             for experiment in experiments:
                                 try:
-                                    LOGGER.debug(
+                                    LOGGER.info(
                                         f"=== checking for tests for experiment {experiment['id']}"
                                     )
                                     tests_response = requests.get(
@@ -67,7 +68,7 @@ def custom_judge(
                                     )
 
                                     if tests_response.status_code != 200:
-                                        LOGGER.debug("Error fetching tests", tests_response.text)
+                                        LOGGER.info(f"Error fetching tests: {tests_response.text}")
                                         raise Exception("Error fetching tests, task is not healthy")
                                     tests = tests_response.json()
 
@@ -85,19 +86,19 @@ def custom_judge(
                                                 }
                                             )
                                 except Exception as e:
-                                    LOGGER.debug("Error fetching tests", e)
+                                    LOGGER.info(f"Error fetching tests: {e}")
                                     test_retries += 1
                                     # If it fails for over 1 minute, raise an exception
                                     if test_retries > 20:
                                         raise
                         except Exception as e:
-                            LOGGER.debug("Error fetching experiments", e)
+                            LOGGER.info(f"Error fetching experiments: {e}")
                             experiment_retries += 1
                             # If it fails for over 1 minute, raise an exception
                             if experiment_retries > 20:
                                 raise
 
-                        LOGGER.debug("=== Sleeping for 5 seconds")
+                        LOGGER.info("=== Sleeping for 5 seconds")
                         time.sleep(5)
                 except KeyboardInterrupt:
                     processor.stop_processing()

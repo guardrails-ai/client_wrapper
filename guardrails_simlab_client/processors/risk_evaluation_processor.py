@@ -78,11 +78,8 @@ class RiskEvaluationProcessor:
 
             # Call the Judge function
             judge_response: JudgeResult = fn(
-                experiment_id=experiment_id,
-                test_id=test_id,
-                risk_name=risk_name,
-                user_message=user_message,
-                bot_response=bot_response,
+                user_message,
+                bot_response,
             )
 
             LOGGER.debug(f"Risk evaluation result: {judge_response}")

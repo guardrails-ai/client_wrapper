@@ -51,19 +51,23 @@ def my_application_interface(user_message):
 ```python
 from guardrails_simlab_client import custom_judge, JudgeResult
 
-@custom_judge(risk_name="Toxic Language", enable=True, application_id="41bddba7-feaf-40e2-ba28-9daf22a1ec71")
+@custom_judge(
+    risk_name="Toxic Language",
+    enable=True,
+    application_id="41bddba7-feaf-40e2-ba28-9daf22a1ec71"
+)
 def custom_judge_fn(
     user_message: str,
     bot_response: str
-    ) -> JudgeResult:
+) -> JudgeResult:
     # Your existing logic
     # 1. Call custom LLM judge API directly
     # 2. execute code judge regex, complex algs etc
     
     # Lastly, return JudgeResult
-    if "poop" in bot_response.lower():
+    if "obscenity" in bot_response.lower():
         return JudgeResult(
-            justification="Detected use of inappropriate language: 'poop'",
+            justification="Detected use of inappropriate language: 'obscenity'",
             triggered=True,
         )
     return JudgeResult(
