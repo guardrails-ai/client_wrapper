@@ -23,7 +23,7 @@ pip install -U --index-url="https://__token__:$GUARDRAILS_TOKEN@pypi.guardrailsa
 from guardrails_simlab_client import simlab_connect
 
 @simlab_connect(enable=True)
-def my_application_interface(user_message):
+def my_application_interface(messages: list[dict[str, str]]) -> str:
     # Your existing logic
     # 1. Call LLM API directly
     # 2. HTTP call to your application
@@ -34,7 +34,7 @@ def my_application_interface(user_message):
     import litellm
     res = litellm.completion(
         model="gpt-4o-mini",
-        messages=[{ "role": "user", "content": user_message }]
+        messages=messages
     )
     return res.choices[0].message.content
 ```
@@ -53,12 +53,9 @@ from guardrails_simlab_client import custom_judge, JudgeResult
 
 @custom_judge(risk_name="Toxic Language", enable=True, application_id="41bddba7-feaf-40e2-ba28-9daf22a1ec71")
 def custom_judge_fn(
-    risk_name: str,
-    experiment_id: str,
-    test_id: str,
     user_message: str,
     bot_response: str
-    ) -> str:
+    ) -> JudgeResult:
     # Your existing logic
     # 1. Call custom LLM judge API directly
     # 2. execute code judge regex, complex algs etc
