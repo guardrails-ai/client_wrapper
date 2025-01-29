@@ -42,6 +42,7 @@ if __name__ == '__main__':
         "role": "user", 
         "content": prompt
     }])
+    # Nothing below here will happen bc above is blocking
     print(out)
 
     judge_out = example_judge(prompt, out)
