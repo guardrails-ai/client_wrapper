@@ -74,7 +74,10 @@ def custom_judge(
 
                                     for test in tests:
                                         test_id = test["id"]
-                                        if test_id not in processor.queued_tests:
+                                        if (
+                                            test_id not in processor.queued_tests
+                                            and test.get("response") is not None
+                                        ):
                                             processor.queued_tests[test_id] = True
                                             processor.processing_queue.put(
                                                 {
