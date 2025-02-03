@@ -59,6 +59,9 @@ def custom_judge(
                             # experiments = [{"id": "123"}]
                             for experiment in experiments:
                                 try:
+                                    if not risk_name in experiment.get("source_data",{}).get("evaluation_configuration", {}).keys():
+                                        LOGGER.info(f"=== Skipping experiment {experiment['id']} as it does not have risk {risk_name}")
+                                        continue
                                     LOGGER.info(
                                         f"=== checking for tests for experiment {experiment['id']}"
                                     )
