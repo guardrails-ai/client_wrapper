@@ -96,8 +96,8 @@ class RiskEvaluationProcessor:
                     headers={"x-api-key": _get_api_key()},
                 )
         
-            if risk_evaluation.status_code != 201:
-                LOGGER.debug("Error posting risk evaluation", risk_evaluation.json())
+            if not risk_evaluation.ok:
+                LOGGER.debug("Error posting risk evaluation", risk_evaluation.text)
                 raise Exception("Error posting risk evaluation, task is not healthy")
             
             LOGGER.debug(f"Risk evaluation POST response: {risk_evaluation.json()}")

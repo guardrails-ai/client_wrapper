@@ -52,10 +52,15 @@ class TestProcessor:
     def _process_test(self, test_data: dict, fn: Callable[[str, ...], str]):
         """Process a single test"""
         try:
-            test = requests.get(
+            test_response = requests.get(
                 f"{self.control_plane_host}/api/experiments/{test_data['experiment_id']}/tests/{test_data['id']}",
                 headers={"x-api-key": _get_api_key()},
-            ).json()
+            )
+
+            if not test_response.ok:
+                raise Exception(f"Error fetching test {test_data['id']}: {test_response.text}")
+            
+            test = test_response.json()
 
             parent_id = test.get('parent_test_id')
 
@@ -63,12 +68,19 @@ class TestProcessor:
                 "role": "user",
                 "content": test_data['prompt']
             }]
+            # TODO: Replace with conversations endpoint
             while parent_id:
                 # get parent test
-                parent_test = requests.get(
+                parent_test_response = requests.get(
                     f"{self.control_plane_host}/api/experiments/{test_data['experiment_id']}/tests/{parent_id}",
                     headers={"x-api-key": _get_api_key()},
-                ).json()
+                )
+                
+                if not parent_test_response.ok:
+                    raise Exception(f"Error fetching parent test {parent_id}: {parent_test_response.text}")
+                
+                parent_test = parent_test_response.json()
+
                 parent_id = parent_test.get('parent_test_id')
                 message_history.insert(0, {
                     "role": "assistant",
