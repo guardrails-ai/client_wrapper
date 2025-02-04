@@ -51,7 +51,7 @@ def custom_judge(
                                 headers={"x-api-key": _get_api_key()},
                             )
 
-                            if experiments_response.status_code != 200:
+                            if not experiments_response.ok:
                                 LOGGER.info(f"Error fetching experiments: {experiments_response.text}")
                                 raise Exception("Error fetching experiments, task is not healthy")
                             experiments = experiments_response.json()
@@ -70,7 +70,7 @@ def custom_judge(
                                         headers={"x-api-key": _get_api_key()},
                                     )
 
-                                    if tests_response.status_code != 200:
+                                    if not tests_response.ok:
                                         LOGGER.info(f"Error fetching tests: {tests_response.text}")
                                         raise Exception("Error fetching tests, task is not healthy")
                                     tests = tests_response.json()

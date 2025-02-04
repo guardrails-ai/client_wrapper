@@ -35,7 +35,7 @@ def tt_webhook_polling_sync(
                                 headers={"x-api-key": _get_api_key()},
                             )
                             
-                            if response.status_code != 200:
+                            if not response.ok:
                                 LOGGER.info(f"Error fetching connection tests: {response.text}", )
                                 raise Exception("Error fetching connection tests, task is not healthy")
                             pending_connection_tests = response.json()
@@ -84,7 +84,7 @@ def tt_webhook_polling_sync(
                                 headers={"x-api-key": _get_api_key()},
                             )
 
-                            if experiments_response.status_code != 200:
+                            if not experiments_response.ok:
                                 LOGGER.info(f"Error fetching experiments: {experiments_response.text}")
                                 raise Exception("Error fetching experiments, task is not healthy")
                             experiments = experiments_response.json()
@@ -98,10 +98,17 @@ def tt_webhook_polling_sync(
                                 LOGGER.info(
                                     f"=== checking for tests for experiment {experiment_id}"
                                 )
-                                tests = requests.get(
+                                tests_response = requests.get(
                                     f"{control_plane_host}/api/experiments/{experiment_id}/tests?appId={app_id}&include-risk-evaluations=false&limit={limit}&unprocessed-only=true",
                                     headers={"x-api-key": _get_api_key()},
-                                ).json()
+                                )
+
+                                if not tests_response.ok:
+                                    sleep = True
+                                    LOGGER.info(f"Error fetching tests: {tests_response.text}")
+                                    continue
+
+                                tests = tests_response.json()
 
                                 for test in tests:
                                     test_id = test["id"]
