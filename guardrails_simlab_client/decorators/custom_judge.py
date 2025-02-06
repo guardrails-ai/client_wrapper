@@ -6,9 +6,12 @@ from urllib.parse import quote_plus
 import requests
 from guardrails_simlab_client.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
 from guardrails_simlab_client.protocols import JudgeResult
-from guardrails_simlab_client.processors.risk_evaluation_processor import RiskEvaluationProcessor
+from guardrails_simlab_client.processors.risk_evaluation_processor import (
+    RiskEvaluationProcessor,
+)
 
 LOGGER = getLogger(__name__)
+
 
 def custom_judge(
     *,
@@ -32,11 +35,14 @@ def custom_judge(
     )
 
     def wrap(
-        fn: Callable[[str, str], JudgeResult]
+        fn: Callable[[str, str], JudgeResult],
     ) -> Callable[[str, str], JudgeResult]:
         LOGGER.info(f"===> Wrapping function {fn.__name__}")
+
         def wrapped(*args, **kwargs):
-            LOGGER.info(f"===> Wrapped function called with args: {args}, kwargs: {kwargs}")
+            LOGGER.info(
+                f"===> Wrapped function called with args: {args}, kwargs: {kwargs}"
+            )
             if enable:
                 LOGGER.info("===> Starting processing")
                 processor.start_processing(fn)
@@ -52,15 +58,28 @@ def custom_judge(
                             )
 
                             if not experiments_response.ok:
-                                LOGGER.info(f"Error fetching experiments: {experiments_response.text}")
-                                raise Exception("Error fetching experiments, task is not healthy")
+                                LOGGER.info(
+                                    f"Error fetching experiments: {experiments_response.text}"
+                                )
+                                raise Exception(
+                                    "Error fetching experiments, task is not healthy"
+                                )
                             experiments = experiments_response.json()
-                            LOGGER.info(f"=== Found {len(experiments)} experiments with validation in progress")
+                            LOGGER.info(
+                                f"=== Found {len(experiments)} experiments with validation in progress"
+                            )
                             # experiments = [{"id": "123"}]
                             for experiment in experiments:
                                 try:
-                                    if not risk_name in experiment.get("source_data",{}).get("evaluation_configuration", {}).keys():
-                                        LOGGER.info(f"=== Skipping experiment {experiment['id']} as it does not have risk {risk_name}")
+                                    if (
+                                        risk_name
+                                        not in experiment.get("source_data", {})
+                                        .get("evaluation_configuration", {})
+                                        .keys()
+                                    ):
+                                        LOGGER.info(
+                                            f"=== Skipping experiment {experiment['id']} as it does not have risk {risk_name}"
+                                        )
                                         continue
                                     LOGGER.info(
                                         f"=== checking for tests for experiment {experiment['id']}"
@@ -71,8 +90,12 @@ def custom_judge(
                                     )
 
                                     if not tests_response.ok:
-                                        LOGGER.info(f"Error fetching tests: {tests_response.text}")
-                                        raise Exception("Error fetching tests, task is not healthy")
+                                        LOGGER.info(
+                                            f"Error fetching tests: {tests_response.text}"
+                                        )
+                                        raise Exception(
+                                            "Error fetching tests, task is not healthy"
+                                        )
                                     tests = tests_response.json()
 
                                     for test in tests:

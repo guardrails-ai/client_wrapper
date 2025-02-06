@@ -16,13 +16,14 @@ LOGGER = getLogger(__name__)
 
 last_successful_test = None
 
+
 class TestProcessor:
     def __init__(
         self,
         control_plane_host: str,
         max_workers: Optional[int] = None,
         application_id: Optional[str] = None,
-        throttle_time: Optional[float] = None
+        throttle_time: Optional[float] = None,
     ):
         self.control_plane_host = control_plane_host
         self.processing_queue = Queue()
@@ -58,16 +59,15 @@ class TestProcessor:
             )
 
             if not test_response.ok:
-                raise Exception(f"Error fetching test {test_data['id']}: {test_response.text}")
-            
+                raise Exception(
+                    f"Error fetching test {test_data['id']}: {test_response.text}"
+                )
+
             test = test_response.json()
 
-            parent_id = test.get('parent_test_id')
+            parent_id = test.get("parent_test_id")
 
-            message_history = [{
-                "role": "user",
-                "content": test_data['prompt']
-            }]
+            message_history = [{"role": "user", "content": test_data["prompt"]}]
             # TODO: Replace with conversations endpoint
             while parent_id:
                 # get parent test
@@ -75,22 +75,22 @@ class TestProcessor:
                     f"{self.control_plane_host}/api/experiments/{test_data['experiment_id']}/tests/{parent_id}",
                     headers={"x-api-key": _get_api_key()},
                 )
-                
+
                 if not parent_test_response.ok:
-                    raise Exception(f"Error fetching parent test {parent_id}: {parent_test_response.text}")
-                
+                    raise Exception(
+                        f"Error fetching parent test {parent_id}: {parent_test_response.text}"
+                    )
+
                 parent_test = parent_test_response.json()
 
-                parent_id = parent_test.get('parent_test_id')
-                message_history.insert(0, {
-                    "role": "assistant",
-                    "content": parent_test['response']
-                })
-                message_history.insert(0, {
-                    "role": "user",
-                    "content": parent_test['prompt']
-                })
-                
+                parent_id = parent_test.get("parent_test_id")
+                message_history.insert(
+                    0, {"role": "assistant", "content": parent_test["response"]}
+                )
+                message_history.insert(
+                    0, {"role": "user", "content": parent_test["prompt"]}
+                )
+
             response = fn(message_history)
 
             report = Report(

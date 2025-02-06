@@ -1,6 +1,6 @@
-
 from dataclasses import dataclass
 from typing import Dict, Optional
+
 
 @dataclass
 class Report:
@@ -21,6 +21,7 @@ class GeneratorPrompt:
     id: str
     prompt: str
     persona: Optional[str] = ""
+
 
 @dataclass
 class JudgeResult:
