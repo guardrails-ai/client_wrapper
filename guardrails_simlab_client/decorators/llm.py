@@ -1,4 +1,4 @@
-from typing import Callable,Optional
+from typing import Callable, Optional
 from logging import getLogger
 
 import time
@@ -9,15 +9,26 @@ from guardrails_simlab_client.processors.test_processor import TestProcessor
 
 LOGGER = getLogger(__name__)
 
+
 def tt_webhook_polling_sync(
     enable: bool,
     control_plane_host: str = CONTROL_PLANE_URL,
     max_workers: Optional[int] = None,  # Controls max concurrency
     application_id: Optional[str] = None,
-    throttle_time: Optional[float] = None # Time in seconds to pause between each request to the wrapped function
+    throttle_time: Optional[
+        float
+    ] = None,  # Time in seconds to pause between each request to the wrapped function
 ) -> Callable:
-    LOGGER.info(f"===> Initializing TestProcessor with application_id: {application_id}")
-    processor = TestProcessor(control_plane_host, max_workers, application_id=application_id, throttle_time=throttle_time)
+    LOGGER.info(
+        f"===> Initializing TestProcessor with application_id: {application_id}"
+    )
+    processor = TestProcessor(
+        control_plane_host,
+        max_workers,
+        application_id=application_id,
+        throttle_time=throttle_time,
+    )
+
     def wrap(fn: Callable[[str, ...], str]) -> Callable:
         def wrapped(*args, **kwargs):
             if enable:
@@ -29,42 +40,53 @@ def tt_webhook_polling_sync(
                         LOGGER.info("===> Starting...")
                         try:
                             connection_tests_url = f"{control_plane_host}/api/connection-tests?status=pending&appId={_get_app_id(application_id)}"
-                            LOGGER.info(f"Fetching connection tests from {connection_tests_url}")
+                            LOGGER.info(
+                                f"Fetching connection tests from {connection_tests_url}"
+                            )
                             response = requests.get(
                                 connection_tests_url,
                                 headers={"x-api-key": _get_api_key()},
                             )
-                            
+
                             if not response.ok:
-                                LOGGER.info(f"Error fetching connection tests: {response.text}", )
-                                raise Exception("Error fetching connection tests, task is not healthy")
+                                LOGGER.info(
+                                    f"Error fetching connection tests: {response.text}",
+                                )
+                                raise Exception(
+                                    "Error fetching connection tests, task is not healthy"
+                                )
                             pending_connection_tests = response.json()
                             for test in pending_connection_tests:
                                 try:
-                                    response = fn([{
-                                        "role": "user",
-                                        "content": test["prompt"]
-                                    }])
+                                    response = fn(
+                                        [{"role": "user", "content": test["prompt"]}]
+                                    )
                                     requests.patch(
                                         f"{control_plane_host}/api/connection-tests/{test['id']}?appId={_get_app_id(application_id)}",
                                         json={
                                             "response": response,
                                             "status": "completed",
                                             "executed_by": _get_app_id(application_id),
-                                            "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                            "completed_at": time.strftime(
+                                                "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
+                                            ),
                                         },
                                         headers={"x-api-key": _get_api_key()},
                                     )
                                     if throttle_time is not None:
                                         time.sleep(throttle_time)
                                 except Exception as e:
-                                    LOGGER.info(f"Error processing connection test: {e}")
+                                    LOGGER.info(
+                                        f"Error processing connection test: {e}"
+                                    )
                                     requests.patch(
                                         f"{control_plane_host}/api/connection-tests/{test['id']}?appId={_get_app_id(application_id)}",
                                         json={
                                             "status": "failed",
                                             "executed_by": _get_app_id(application_id),
-                                            "failed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                            "failed_at": time.strftime(
+                                                "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
+                                            ),
                                             "error": str(e),
                                         },
                                         headers={"x-api-key": _get_api_key()},
@@ -85,10 +107,16 @@ def tt_webhook_polling_sync(
                             )
 
                             if not experiments_response.ok:
-                                LOGGER.info(f"Error fetching experiments: {experiments_response.text}")
-                                raise Exception("Error fetching experiments, task is not healthy")
+                                LOGGER.info(
+                                    f"Error fetching experiments: {experiments_response.text}"
+                                )
+                                raise Exception(
+                                    "Error fetching experiments, task is not healthy"
+                                )
                             experiments = experiments_response.json()
-                            LOGGER.info(f"=== Found {len(experiments)} unevaluated experiments")
+                            LOGGER.info(
+                                f"=== Found {len(experiments)} unevaluated experiments"
+                            )
                             sleep = True
 
                             for experiment in experiments:
@@ -105,7 +133,9 @@ def tt_webhook_polling_sync(
 
                                 if not tests_response.ok:
                                     sleep = True
-                                    LOGGER.info(f"Error fetching tests: {tests_response.text}")
+                                    LOGGER.info(
+                                        f"Error fetching tests: {tests_response.text}"
+                                    )
                                     continue
 
                                 tests = tests_response.json()
@@ -133,7 +163,7 @@ def tt_webhook_polling_sync(
                             # If it fails for over 1 minute, raise an exception
                             if experiement_retries > 20:
                                 raise
-                        
+
                         if sleep:
                             LOGGER.info("=== Sleeping for 5 seconds")
                             time.sleep(5)

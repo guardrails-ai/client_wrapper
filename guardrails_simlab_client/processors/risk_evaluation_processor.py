@@ -63,7 +63,9 @@ class RiskEvaluationProcessor:
             except Exception as e:
                 LOGGER.debug(f"Error submitting test to thread pool: {e}")
 
-    def _evaluate_risk(self, test_data: Dict[str, str], fn: Callable[[str, str], JudgeResult]):
+    def _evaluate_risk(
+        self, test_data: Dict[str, str], fn: Callable[[str, str], JudgeResult]
+    ):
         try:
             experiment_id = test_data["experiment_id"]
             test_id = test_data["test_id"]
@@ -85,21 +87,21 @@ class RiskEvaluationProcessor:
             LOGGER.debug(f"Risk evaluation result: {judge_response}")
             # Post a Risk Evaluation
             risk_evaluation = requests.post(
-                    f"{self.control_plane_host}/api/experiments/{experiment_id}/tests/{test_id}/evaluations?appId={_get_app_id(self.application_id)}",
-                    json={
-                        "test_id": test_id,
-                        "judge_prompt": "", # does this need to be set?
-                        "judge_response": judge_response.justification,
-                        "risk_type": risk_name,
-                        "risk_triggered": judge_response.triggered,
-                        },
-                    headers={"x-api-key": _get_api_key()},
-                )
-        
+                f"{self.control_plane_host}/api/experiments/{experiment_id}/tests/{test_id}/evaluations?appId={_get_app_id(self.application_id)}",
+                json={
+                    "test_id": test_id,
+                    "judge_prompt": "",  # does this need to be set?
+                    "judge_response": judge_response.justification,
+                    "risk_type": risk_name,
+                    "risk_triggered": judge_response.triggered,
+                },
+                headers={"x-api-key": _get_api_key()},
+            )
+
             if not risk_evaluation.ok:
                 LOGGER.debug("Error posting risk evaluation", risk_evaluation.text)
                 raise Exception("Error posting risk evaluation, task is not healthy")
-            
+
             LOGGER.debug(f"Risk evaluation POST response: {risk_evaluation.json()}")
         except Exception as e:
             LOGGER.debug(f"Error evaluating risk: {e}")
