@@ -6,6 +6,7 @@ import requests
 
 from guardrails_simlab_client.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
 from guardrails_simlab_client.processors.test_processor import TestProcessor
+from guardrails_simlab_client.protocols import HttpError
 
 LOGGER = getLogger(__name__)
 
@@ -36,7 +37,8 @@ def tt_webhook_polling_sync(
                             )
                             
                             if not response.ok:
-                                response.raise_for_status()
+                                message = response.json().get("message") or response.text
+                                raise HttpError(status_code=response.status_code, message=message)
                             pending_connection_tests = response.json()
                             for test in pending_connection_tests:
                                 try:
@@ -84,7 +86,8 @@ def tt_webhook_polling_sync(
                             )
 
                             if not experiments_response.ok:
-                                experiments_response.raise_for_status()
+                                message = experiments_response.json().get("message") or experiments_response.text
+                                raise HttpError(status_code=experiments_response.status_code, message=message)
                             experiments = experiments_response.json()
                             LOGGER.info(f"=== Found {len(experiments)} unevaluated experiments")
                             sleep = True
@@ -140,9 +143,11 @@ def tt_webhook_polling_sync(
                 except KeyboardInterrupt:
                     processor.stop_processing()
                     raise
-                except requests.HTTPError as e:
-                    if e.response.status_code == 401:
+                except HttpError as e:
+                    if e.status_code == 401:
                         LOGGER.error("Unauthorized request. Please check that your API key is not expired and is set to the `GUARDRAILS_TOKEN` environment variable.")
+                    elif e.status_code == 404:
+                        LOGGER.error(e.message)
                     processor.stop_processing()
                     raise
 

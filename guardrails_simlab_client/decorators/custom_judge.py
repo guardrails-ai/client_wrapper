@@ -5,7 +5,7 @@ from urllib.parse import quote_plus
 
 import requests
 from guardrails_simlab_client.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
-from guardrails_simlab_client.protocols import JudgeResult
+from guardrails_simlab_client.protocols import HttpError, JudgeResult
 from guardrails_simlab_client.processors.risk_evaluation_processor import RiskEvaluationProcessor
 
 LOGGER = getLogger(__name__)
@@ -52,7 +52,9 @@ def custom_judge(
                             )
 
                             if not experiments_response.ok:
-                                experiments_response.raise_for_status()
+                                message = experiments_response.json().get("message") or experiments_response.text
+                                raise HttpError(status_code=experiments_response.status_code, message=message)
+
                             experiments = experiments_response.json()
                             LOGGER.info(f"=== Found {len(experiments)} experiments with validation in progress")
                             # experiments = [{"id": "123"}]
@@ -70,7 +72,8 @@ def custom_judge(
                                     )
 
                                     if not tests_response.ok:
-                                        tests_response.raise_for_status()
+                                        message = tests_response.json().get("message") or tests_response.text
+                                        raise HttpError(status_code=tests_response.status_code, message=message)
                                     tests = tests_response.json()
 
                                     for test in tests:
@@ -107,9 +110,11 @@ def custom_judge(
                 except KeyboardInterrupt:
                     processor.stop_processing()
                     raise
-                except requests.HTTPError as e:
-                    if e.response.status_code == 401:
+                except HttpError as e:
+                    if e.status_code == 401:
                         LOGGER.error("Unauthorized request. Please check that your API key is not expired and is set to the `GUARDRAILS_TOKEN` environment variable.")
+                    elif e.status_code == 404:
+                        LOGGER.error(e.message)
                     processor.stop_processing()
                     raise
             else:
