@@ -36,8 +36,7 @@ def tt_webhook_polling_sync(
                             )
                             
                             if not response.ok:
-                                LOGGER.info(f"Error fetching connection tests: {response.text}", )
-                                raise Exception("Error fetching connection tests, task is not healthy")
+                                response.raise_for_status()
                             pending_connection_tests = response.json()
                             for test in pending_connection_tests:
                                 try:
@@ -70,7 +69,7 @@ def tt_webhook_polling_sync(
                                         headers={"x-api-key": _get_api_key()},
                                     )
                         except Exception as e:
-                            LOGGER.info(f"Error fetching connection tests: {e}")
+                            LOGGER.error(f"Error fetching connection tests: {e}")
                             connection_test_retries += 1
                             sleep = True
                             # If it fails for over 1 minute, raise an exception
@@ -85,8 +84,7 @@ def tt_webhook_polling_sync(
                             )
 
                             if not experiments_response.ok:
-                                LOGGER.info(f"Error fetching experiments: {experiments_response.text}")
-                                raise Exception("Error fetching experiments, task is not healthy")
+                                experiments_response.raise_for_status()
                             experiments = experiments_response.json()
                             LOGGER.info(f"=== Found {len(experiments)} unevaluated experiments")
                             sleep = True
@@ -105,7 +103,8 @@ def tt_webhook_polling_sync(
 
                                 if not tests_response.ok:
                                     sleep = True
-                                    LOGGER.info(f"Error fetching tests: {tests_response.text}")
+                                    LOGGER.error(f"Error fetching tests: {tests_response.text}")
+                                    experiement_retries += 1
                                     continue
 
                                 tests = tests_response.json()
@@ -127,7 +126,7 @@ def tt_webhook_polling_sync(
                                             }
                                         )
                         except Exception as e:
-                            LOGGER.info(f"Error fetching experiments: {e}")
+                            LOGGER.error(f"Error fetching experiments: {e}")
                             experiement_retries += 1
                             sleep = True
                             # If it fails for over 1 minute, raise an exception
@@ -139,6 +138,11 @@ def tt_webhook_polling_sync(
                             time.sleep(5)
 
                 except KeyboardInterrupt:
+                    processor.stop_processing()
+                    raise
+                except requests.HTTPError as e:
+                    if e.response.status_code == 401:
+                        LOGGER.error("Unauthorized request. Please check that your API key is not expired and is set to the `GUARDRAILS_TOKEN` environment variable.")
                     processor.stop_processing()
                     raise
 

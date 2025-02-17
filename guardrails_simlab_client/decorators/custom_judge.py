@@ -52,8 +52,7 @@ def custom_judge(
                             )
 
                             if not experiments_response.ok:
-                                LOGGER.info(f"Error fetching experiments: {experiments_response.text}")
-                                raise Exception("Error fetching experiments, task is not healthy")
+                                experiments_response.raise_for_status()
                             experiments = experiments_response.json()
                             LOGGER.info(f"=== Found {len(experiments)} experiments with validation in progress")
                             # experiments = [{"id": "123"}]
@@ -71,8 +70,7 @@ def custom_judge(
                                     )
 
                                     if not tests_response.ok:
-                                        LOGGER.info(f"Error fetching tests: {tests_response.text}")
-                                        raise Exception("Error fetching tests, task is not healthy")
+                                        tests_response.raise_for_status()
                                     tests = tests_response.json()
 
                                     for test in tests:
@@ -92,13 +90,13 @@ def custom_judge(
                                                 }
                                             )
                                 except Exception as e:
-                                    LOGGER.info(f"Error fetching tests: {e}")
+                                    LOGGER.error(f"Error fetching tests: {e}")
                                     test_retries += 1
                                     # If it fails for over 1 minute, raise an exception
                                     if test_retries > 20:
                                         raise
                         except Exception as e:
-                            LOGGER.info(f"Error fetching experiments: {e}")
+                            LOGGER.error(f"Error fetching experiments: {e}")
                             experiment_retries += 1
                             # If it fails for over 1 minute, raise an exception
                             if experiment_retries > 20:
@@ -107,6 +105,11 @@ def custom_judge(
                         LOGGER.info("=== Sleeping for 5 seconds")
                         time.sleep(5)
                 except KeyboardInterrupt:
+                    processor.stop_processing()
+                    raise
+                except requests.HTTPError as e:
+                    if e.response.status_code == 401:
+                        LOGGER.error("Unauthorized request. Please check that your API key is not expired and is set to the `GUARDRAILS_TOKEN` environment variable.")
                     processor.stop_processing()
                     raise
             else:
