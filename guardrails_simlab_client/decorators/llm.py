@@ -6,6 +6,7 @@ import requests
 
 from guardrails_simlab_client.env import CONTROL_PLANE_URL, _get_api_key, _get_app_id
 from guardrails_simlab_client.processors.test_processor import TestProcessor
+from guardrails_simlab_client.protocols import HttpError
 
 LOGGER = getLogger(__name__)
 
@@ -36,8 +37,8 @@ def tt_webhook_polling_sync(
                             )
                             
                             if not response.ok:
-                                LOGGER.info(f"Error fetching connection tests: {response.text}", )
-                                raise Exception("Error fetching connection tests, task is not healthy")
+                                message = response.json().get("message") or response.text
+                                raise HttpError(status_code=response.status_code, message=message)
                             pending_connection_tests = response.json()
                             for test in pending_connection_tests:
                                 try:
@@ -70,7 +71,7 @@ def tt_webhook_polling_sync(
                                         headers={"x-api-key": _get_api_key()},
                                     )
                         except Exception as e:
-                            LOGGER.info(f"Error fetching connection tests: {e}")
+                            LOGGER.error(f"Error fetching connection tests: {e}")
                             connection_test_retries += 1
                             sleep = True
                             # If it fails for over 1 minute, raise an exception
@@ -85,8 +86,8 @@ def tt_webhook_polling_sync(
                             )
 
                             if not experiments_response.ok:
-                                LOGGER.info(f"Error fetching experiments: {experiments_response.text}")
-                                raise Exception("Error fetching experiments, task is not healthy")
+                                message = experiments_response.json().get("message") or experiments_response.text
+                                raise HttpError(status_code=experiments_response.status_code, message=message)
                             experiments = experiments_response.json()
                             LOGGER.info(f"=== Found {len(experiments)} unevaluated experiments")
                             sleep = True
@@ -105,7 +106,8 @@ def tt_webhook_polling_sync(
 
                                 if not tests_response.ok:
                                     sleep = True
-                                    LOGGER.info(f"Error fetching tests: {tests_response.text}")
+                                    LOGGER.error(f"Error fetching tests: {tests_response.text}")
+                                    experiement_retries += 1
                                     continue
 
                                 tests = tests_response.json()
@@ -127,7 +129,7 @@ def tt_webhook_polling_sync(
                                             }
                                         )
                         except Exception as e:
-                            LOGGER.info(f"Error fetching experiments: {e}")
+                            LOGGER.error(f"Error fetching experiments: {e}")
                             experiement_retries += 1
                             sleep = True
                             # If it fails for over 1 minute, raise an exception
@@ -139,6 +141,13 @@ def tt_webhook_polling_sync(
                             time.sleep(5)
 
                 except KeyboardInterrupt:
+                    processor.stop_processing()
+                    raise
+                except HttpError as e:
+                    if e.status_code == 401:
+                        LOGGER.error("Unauthorized request. Please check that your API key is not expired and is set to the `GUARDRAILS_TOKEN` environment variable.")
+                    elif e.status_code == 404:
+                        LOGGER.error(e.message)
                     processor.stop_processing()
                     raise
 
