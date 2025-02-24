@@ -70,6 +70,7 @@ class RiskEvaluationProcessor:
             user_message = test_data["user_message"]
             bot_response = test_data["bot_response"]
             risk_name = test_data["risk_name"]
+            messages = test_data.get("messages", [])
 
             LOGGER.debug(
                 f"Evaluating risk for experiment_id: {experiment_id}, test_id: {test_id}"
@@ -80,6 +81,7 @@ class RiskEvaluationProcessor:
             judge_response: JudgeResult = fn(
                 user_message,
                 bot_response,
+                messages,
             )
 
             LOGGER.debug(f"Risk evaluation result: {judge_response}")

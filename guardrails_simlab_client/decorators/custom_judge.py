@@ -83,6 +83,16 @@ def custom_judge(
                                             and test.get("response") is not None
                                         ):
                                             processor.queued_tests[test_id] = True
+                                            conversation_response = requests.get(
+                                                f"{control_plane_host}/api/experiments/{experiment['id']}/tests/{test_id}/conversations?include-adaptability-messages=true",
+                                                headers={
+                                                    "x-api-key": _get_api_key(),
+                                                },
+                                            )
+                                            if not conversation_response.ok:
+                                                message = conversation_response.json().get("message") or conversation_response.text
+                                                raise HttpError(status_code=conversation_response.status_code, message=message)
+                                            conversation = conversation_response.json()
                                             processor.processing_queue.put(
                                                 {
                                                     "experiment_id": experiment["id"],
@@ -90,6 +100,7 @@ def custom_judge(
                                                     "user_message": test["prompt"],
                                                     "bot_response": test["response"],
                                                     "risk_name": risk_name,
+                                                    "messages": conversation[0]["messages"],
                                                 }
                                             )
                                 except Exception as e:
