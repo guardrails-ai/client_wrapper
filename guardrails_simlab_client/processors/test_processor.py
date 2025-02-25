@@ -2,6 +2,7 @@ import os
 from dataclasses import asdict
 from typing import Callable, Dict, Optional
 from logging import getLogger
+from contextvars import ContextVar
 
 import time
 import requests
@@ -14,6 +15,7 @@ from guardrails_simlab_client.env import _get_api_key, _get_app_id
 
 LOGGER = getLogger(__name__)
 
+test_context = ContextVar('test_context', default=None)
 last_successful_test = None
 
 class TestProcessor:
@@ -91,7 +93,14 @@ class TestProcessor:
                     "content": parent_test['prompt']
                 })
                 
-            response = fn(message_history)
+            context_token = test_context.set({
+                'experiment_id': test_data['experiment_id'],
+                'test_id': test_data['id']
+            })
+            try:
+                response = fn(message_history)
+            finally:
+                test_context.reset(context_token)
 
             report = Report(
                 id=test_data["id"],
