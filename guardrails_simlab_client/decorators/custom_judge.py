@@ -67,7 +67,7 @@ def custom_judge(
                                         f"=== checking for tests for experiment {experiment['id']}"
                                     )
                                     tests_response = requests.get(
-                                        f"{control_plane_host}/api/experiments/{experiment['id']}/tests?appId={_get_app_id(application_id)}&unevaluated-risk={quote_plus(risk_name)}&include-risk-evaluations=false",
+                                        f"{control_plane_host}/api/experiments/{experiment['id']}/tests?appId={_get_app_id(application_id)}&unevaluated-risk={quote_plus(risk_name)}&include-risk-evaluations=true",
                                         headers={"x-api-key": _get_api_key()},
                                     )
 
