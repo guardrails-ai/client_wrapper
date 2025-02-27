@@ -58,7 +58,8 @@ from guardrails_simlab_client import custom_judge, JudgeResult
 )
 def custom_judge_fn(
     user_message: str,
-    bot_response: str
+    bot_response: str,
+    messages: dict[str, str] # full conversation history
 ) -> JudgeResult:
     # Your existing logic
     # 1. Call custom LLM judge API directly
