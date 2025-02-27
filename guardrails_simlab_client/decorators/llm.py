@@ -11,8 +11,8 @@ from guardrails_simlab_client.protocols import HttpError
 LOGGER = getLogger(__name__)
 
 def tt_webhook_polling_sync(
-    enable: bool,
-    control_plane_host: str = CONTROL_PLANE_URL,
+    enable: Optional[bool] = True,
+    control_plane_host: Optional[str] = CONTROL_PLANE_URL,
     max_workers: Optional[int] = None,  # Controls max concurrency
     application_id: Optional[str] = None,
     throttle_time: Optional[float] = None # Time in seconds to pause between each request to the wrapped function
