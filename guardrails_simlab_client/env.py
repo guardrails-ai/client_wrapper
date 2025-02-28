@@ -3,7 +3,7 @@ import re
 from typing import Optional
 
 
-DEFAULT_CONTROL_PLANE_URL = "http://localhost:8080"
+DEFAULT_CONTROL_PLANE_URL = "https://api.simlab.guardrailsai.com"
 
 CONTROL_PLANE_URL = os.environ.get("CONTROL_PLANE_URL", DEFAULT_CONTROL_PLANE_URL)
 

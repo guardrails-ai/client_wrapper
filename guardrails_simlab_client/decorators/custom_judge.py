@@ -14,7 +14,7 @@ def custom_judge(
     *,
     risk_name: str,
     enable: Optional[bool] = True,
-    control_plane_host: str = CONTROL_PLANE_URL,
+    control_plane_host: Optional[str] = CONTROL_PLANE_URL,
     max_workers: Optional[int] = None,  # Controls max concurrency
     application_id: Optional[str] = None,
     throttle_time: Optional[
